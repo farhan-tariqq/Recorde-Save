@@ -1,0 +1,404 @@
+
+<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Record Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css"
+    />
+    <!-- Add this style block in your HTML file -->
+    <style>
+        body {
+            overflow-x: hidden;
+            padding-top: 60px; /* Adjusted to account for the fixed navbar */
+        }
+
+        .records-container {
+            margin: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .add-record-form {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .add-record-form h4 {
+            color: #3498db;
+            margin-bottom: 10px;
+        }
+
+        .add-record-form label {
+            font-weight: bold;
+        }
+
+        .add-record-form input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+        }
+
+        .add-record-form button {
+            background-color: #3498db;
+            color: #fff;
+            padding: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .add-record-form button:hover {
+            background-color: #2980b9;
+        }
+
+        .search-container {
+            margin-top: 20px;
+        }
+
+        .search-container label {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .search-container input {
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        .action-buttons {
+            display: flex;
+        }
+
+        .action-buttons button {
+            margin-right: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .add-record-form {
+                padding: 10px;
+            }
+
+            .add-record-form input {
+                padding: 8px;
+            }
+        }
+    </style>
+
+    <style>
+        body {
+          overflow-x: hidden;
+          padding-top: 60px; /* Adjusted to account for the fixed navbar */
+        }
+  
+        .records-container {
+          margin: 20px;
+        }
+  
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 20px;
+        }
+  
+        table,
+        th,
+        td {
+          border: 1px solid #ddd;
+        }
+  
+        th,
+        td {
+          padding: 10px;
+          text-align: left;
+        }
+  
+        th {
+          background-color: #f2f2f2;
+        }
+  
+        .add-record-form {
+          margin-top: 20px;
+        }
+  
+        .search-container {
+          margin-top: 20px;
+        }
+  
+        .action-buttons {
+          display: flex;
+        }
+  
+        .action-buttons button {
+          margin-right: 5px;
+        }
+        .add-record-form input:invalid {
+            border: 2px solid red;
+        }
+    </style>
+</head>
+<body>
+    <div class="records-container">
+        <h3>Records:</h3>
+        <div class="search-container">
+            <label for="search">Search:</label>
+            <input type="text" id="search" oninput="searchRecords()"/>
+        </div>
+        <table id="recordsTable">
+            <thead>
+            <tr>
+                <th>Serial No.</th>
+                <th>Name</th>
+                <th>Father's Name</th>
+                <th>Class</th>
+                <th>Roll Number</th>
+                <th>Section</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div class="add-record-form">
+            <h4>Add Record:</h4>
+            <label for="name">Name:</label>
+            <input type="text" id="name" pattern="[A-Za-z ]+" title="Only letters and spaces are allowed" required/>
+            <br/>
+            <label for="fatherName">Father's Name:</label>
+            <input type="text" id="fatherName" pattern="[A-Za-z ]+" title="Only letters and spaces are allowed" required/>
+            <br/>
+            <label for="className">Class:</label>
+            <input type="number" id="className" pattern="\d+" title="Only numbers are allowed" required/>
+            <br/>
+            <label for="rollNumber">Roll Number:</label>
+            <input type="number" id="rollNumber" pattern="\d+" title="Only numbers are allowed" required/>
+            <br/>
+            <label for="section">Section:</label>
+            <input type="text" id="section"/>
+            <br/>
+            <button onclick="saveRecord()">Save Record</button>
+        </div>
+        <div class="action-buttons">
+            <button onclick="downloadRecords()">Download Records</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        var records = [];
+        var recordCounter = 1;
+    
+        function saveRecord() {
+            var name = document.getElementById("name").value.toUpperCase();
+            var fatherName = document.getElementById("fatherName").value.toUpperCase();
+            var className = document.getElementById("className").value;
+            var rollNumber = document.getElementById("rollNumber").value;
+            var section = document.getElementById("section").value;
+    
+            if (validateName(name) && validateName(fatherName) && validateNumber(className) && validateNumber(rollNumber) && section) {
+                var newRecord = {
+                    serialNo: recordCounter,
+                    name: name,
+                    fatherName: fatherName,
+                    class: className,
+                    rollNo: rollNumber,
+                    section: section
+                };
+    
+                records.push(newRecord);
+                recordCounter++;
+    
+                displayRecords(records, "recordsTable");
+    
+                document.getElementById("name").value = "";
+                document.getElementById("fatherName").value =
+
+                "";
+                document.getElementById("className").value = "";
+                document.getElementById("rollNumber").value = "";
+                document.getElementById("section").value = "";
+            } else {
+                alert("Please fill in all fields correctly before saving.");
+            }
+        }
+    
+        function validateName(value) {
+            return /^[A-Za-z ]+$/.test(value);
+        }
+    
+        function validateNumber(value) {
+            return /^\d+$/.test(value);
+        }
+    
+        function displayRecords(records, targetTableId) {
+            var table = document.getElementById(targetTableId).getElementsByTagName('tbody')[0];
+            table.innerHTML = '';
+    
+            records.forEach(function (record) {
+                var row = table.insertRow(-1);
+                var cell1 = row.insertCell(0);
+                var cell2 = row.insertCell(1);
+                var cell3 = row.insertCell(2);
+                var cell4 = row.insertCell(3);
+                var cell5 = row.insertCell(4);
+                var cell6 = row.insertCell(5);
+                var cell7 = row.insertCell(6);
+    
+                cell1.innerHTML = record.serialNo;
+                cell2.innerHTML = record.name;
+                cell3.innerHTML = record.fatherName;
+                cell4.innerHTML = record.class;
+                cell5.innerHTML = record.rollNo;
+                cell6.innerHTML = record.section;
+    
+                var actionButtons = document.createElement("div");
+                actionButtons.classList.add("action-buttons");
+    
+                var editButton = document.createElement("button");
+                editButton.innerHTML = '<i class="fas fa-edit"></i>';
+                editButton.classList.add("btn", "btn-primary");
+                editButton.onclick = function () {
+                    editRecord(record.serialNo);
+                };
+    
+                var deleteButton = document.createElement("button");
+                deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                deleteButton.classList.add("btn", "btn-danger");
+                deleteButton.onclick = function () {
+                    deleteRecord(record.serialNo);
+                };
+    
+                actionButtons.appendChild(editButton);
+                actionButtons.appendChild(deleteButton);
+    
+                cell7.appendChild(actionButtons);
+            });
+        }
+    
+        function searchRecords() {
+            var searchTerm = document.getElementById("search").value.toLowerCase();
+            var filteredRecords = records.filter(function (record) {
+                return (
+                    record.name.toLowerCase().includes(searchTerm) ||
+                    record.fatherName.toLowerCase().includes(searchTerm) ||
+                    record.class.toLowerCase().includes(searchTerm) ||
+                    record.rollNo.toLowerCase().includes(searchTerm) ||
+                    record.section.toLowerCase().includes(searchTerm)
+                );
+            });
+    
+            displayRecords(filteredRecords, "recordsTable");
+        }
+    
+        function editRecord(serialNo) {
+            var recordToEditIndex = records.findIndex(function (record) {
+                return record.serialNo === serialNo;
+            });
+    
+            if (recordToEditIndex !== -1) {
+                var recordToEdit = records[recordToEditIndex];
+    
+                document.getElementById("name").value = recordToEdit.name;
+                document.getElementById("fatherName").value = recordToEdit.fatherName;
+                document.getElementById("className").value = recordToEdit.class;
+                document.getElementById("rollNumber").value = recordToEdit.rollNo;
+                document.getElementById("section").value = recordToEdit.section;
+    
+                // Remove the record from the array
+                records.splice(recordToEditIndex, 1);
+    
+                // Update the table
+                displayRecords(records, "recordsTable");
+            }
+        }
+    
+        function deleteRecord(serialNo) {
+            var deletedRecordIndex = records.findIndex(function (record) {
+                return record.serialNo === serialNo;
+            });
+    
+            if (deletedRecordIndex !== -1) {
+                records.splice(deletedRecordIndex, 1);
+    
+                // Update the serial numbers
+                records.forEach(function (record, index) {
+                    record.serialNo = index + 1;
+                });
+    
+                displayRecords(records, "recordsTable");
+            }
+        }
+
+        // (Previous script content)
+
+    function downloadRecords() {
+        var tableHTML = generateTableHTML(records);
+        var blob = new Blob([tableHTML], { type: "text/html" });
+        var link = document.createElement("a");
+        link.href = window.URL.createObjectURL(blob);
+        link.download = "records_table.html";
+        link.click();
+    }
+
+    function generateTableHTML(records) {
+        var table = '<table border="1"><thead><tr>' +
+            '<th>Serial No.</th>' +
+            '<th>Name</th>' +
+            '<th>Father\'s Name</th>' +
+            '<th>Class</th>' +
+            '<th>Roll Number</th>' +
+            '<th>Section</th>' +
+            '</tr></thead><tbody>';
+
+        records.forEach(function (record) {
+            table += '<tr>' +
+                '<td>' + record.serialNo + '</td>' +
+                '<td>' + record.name + '</td>' +
+                '<td>' + record.fatherName + '</td>' +
+                '<td>' + record.class + '</td>' +
+                '<td>' + record.rollNo + '</td>' +
+                '<td>' + record.section + '</td>' +
+                '</tr>';
+        });
+
+        table += '</tbody></table>';
+
+        return '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
+            '<meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+            '<title>Records Table</title></head><body>' + table + '</body></html>';
+    }
+    </script>
+</body>
+</html>
+<!-- ``` -->
+
+<!-- This code includes the functionality to download records in JSON format when the "Download Records" button is clicked. -->
